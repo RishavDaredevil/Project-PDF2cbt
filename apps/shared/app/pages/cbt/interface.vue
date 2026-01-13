@@ -46,6 +46,15 @@
               class="flex gap-2 items-center ml-auto"
             >
               <BaseButton
+                label="Calculator"
+                variant="link"
+                size="sm"
+                class="mr-1 text-black!"
+                icon-name="mdi:calculator"
+                :disabled="isTestPaused || testState.currentProcess !== 'test-started'"
+                @click="showCalculator = !showCalculator"
+              />
+              <BaseButton
                 v-if="uiSettings.mainLayout.showQuestionPaperBtn"
                 label="Question Paper"
                 variant="link"
@@ -66,6 +75,7 @@
             v-model:img-width-size="questionPaperDialogState.imgWidthSize"
             :questions-numbering-order-type="currentTestState.questionsNumberingOrderType"
           />
+          <CbtInterfaceCalculator v-if="showCalculator" @close="showCalculator = false" />
           <UiScrollArea
             class="w-full border-slate-400"
             viewport-class="[&>div]:mb-3"
@@ -616,6 +626,8 @@ const questionPaperDialogState = shallowReactive({
   imgWidthSize: 100,
 })
 
+const showCalculator = shallowRef(false)
+
 const db = useDB()
 
 // styles and css variables being used on page
@@ -718,6 +730,8 @@ const {
   testSectionsSummary,
   currentTestState,
   testQuestionsUrls,
+  instantExamPdf,
+  instantExamData,
 } = useCbtTestData()
 
 useCreateSectionsSummary(testSectionsData, testSectionsSummary)
@@ -1282,6 +1296,37 @@ const downloadTestData = () => {
   const blob = new Blob([JSON.stringify(testOutputData, null, 2)], { type: 'application/json' })
   utilSaveFile('pdf2cbt_test_data.json', blob)
 }
+
+onMounted(async () => {
+  // Check for Instant Exam Data
+  if (instantExamPdf.value && instantExamData.value) {
+      try {
+          const buffer = await instantExamPdf.value.arrayBuffer()
+          testState.pdfFile = new Uint8Array(buffer)
+          testState.currentProcess = 'preparing-imgs'
+
+          // Construct Answer Key
+          const answerKey: TestAnswerKeyData = {}
+          Object.entries(instantExamData.value.sections).forEach(([section, questions]) => {
+            answerKey[section] = {}
+            answerKey[section][section] = {} // Subject matches Section
+            questions.forEach(q => {
+                answerKey[section][section][q.queNo] = {
+                    correctAnswer: q.key,
+                    type: q.type,
+                    // marks: q.marks // TestAnswerKeyData doesn't seem to store marks in the type definition I saw?
+                    // Let's check TestAnswerKeyData type again.
+                    // It has { type, answerOptions?, correctAnswer }
+                    // It does NOT have marks. Marks are in CropperData.
+                }
+            })
+          })
+          testState.testAnswerKey = answerKey
+      } catch (e) {
+          console.error("Failed to initialize instant exam", e)
+      }
+  }
+})
 
 onBeforeUnmount(pageCleanUpCallback)
 
