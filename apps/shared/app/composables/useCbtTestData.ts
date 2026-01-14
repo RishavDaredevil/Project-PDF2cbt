@@ -1,4 +1,5 @@
 import { CbtUseState } from '#layers/shared/shared/enums'
+import type { ParsedInstantExamData } from '#layers/shared/app/utils/utilParseInstantExam'
 
 const sectionsPrevQuestion: Record<string, number> = {}
 
@@ -155,6 +156,96 @@ export default () => {
     () => null,
   )
 
+  const instantExamPdf = useState<File | null>('instantExamPdf', () => null)
+  const instantExamData = useState<ParsedInstantExamData | null>('instantExamData', () => null)
+
+  const initializeInstantTest = (parsedData: ParsedInstantExamData, pdfFile: File, examDetails: { name: string, duration: number }) => {
+    instantExamPdf.value = pdfFile
+    instantExamData.value = parsedData
+
+    // 1. Sections List
+    const newSectionsList: TestSectionListItem[] = []
+    const sectionNames = Object.keys(parsedData.sections)
+    sectionNames.forEach((name, idx) => {
+         newSectionsList.push({ name, subject: name, id: idx + 1 })
+    })
+    testSectionsList.value = newSectionsList
+
+    // 2. Data
+    const newSectionsData: TestSessionSectionsData = {}
+    const newQuestionsData: Map<number, TestSessionQuestionData> = new Map()
+    const newCropperData: CropperSectionsData = {}
+    const newSectionsPrevQuestion: Record<string, number> = {}
+
+    let globalQueId = 1
+
+    sectionNames.forEach(section => {
+        newSectionsData[section] = {}
+        newCropperData[section] = {}
+
+        const questions = parsedData.sections[section]
+        questions.sort((a, b) => a.queNo - b.queNo)
+
+        if (questions.length > 0) {
+             newSectionsPrevQuestion[section] = questions[0].queNo
+        }
+
+        questions.forEach(q => {
+            const queNum = q.queNo
+
+            // Cropper Data
+            newCropperData[section][queNum] = {
+                que: queNum,
+                type: q.type,
+                marks: q.marks,
+                pdfData: [{ page: 1, x1: 0, y1: 0, x2: 0, y2: 0 }],
+                answerOptions: '4', // Default
+            }
+
+            // Question Data
+            const questionData: TestSessionQuestionData = {
+                secQueId: queNum,
+                queId: globalQueId,
+                que: queNum,
+                section,
+                type: q.type,
+                answerOptions: '4',
+                answer: null,
+                status: 'notVisited',
+                timeSpent: 0
+            }
+
+            newSectionsData[section][queNum] = questionData
+            newQuestionsData.set(globalQueId, questionData)
+            globalQueId++
+        })
+    })
+
+    testSectionsData.value = newSectionsData
+    testQuestionsData.value = newQuestionsData
+    cropperSectionsData.value = newCropperData
+
+    // 3. Current Test State
+    const firstSection = sectionNames[0] || ''
+    const firstQuestion = newSectionsPrevQuestion[firstSection] || 1
+    const firstQueId = newSectionsData[firstSection]?.[firstQuestion]?.queId || 1
+
+    currentTestState.value = {
+        section: firstSection,
+        question: firstQuestion,
+        queId: firstQueId,
+        testName: examDetails.name,
+        testDuration: examDetails.duration,
+        remainingSeconds: null,
+        currentQuestionStartTime: examDetails.duration,
+        testStatus: 'notStarted',
+        currentAnswerBuffer: null,
+        questionsNumberingOrderType: 'original',
+        saveTestData: true,
+        sectionsPrevQuestion: newSectionsPrevQuestion
+    }
+  }
+
   return {
     testSectionsList,
     cropperSectionsData,
@@ -164,5 +255,8 @@ export default () => {
     lastLoggedAnswer,
     testQuestionsUrls,
     testSectionsSummary,
+    instantExamPdf,
+    instantExamData,
+    initializeInstantTest
   }
 }

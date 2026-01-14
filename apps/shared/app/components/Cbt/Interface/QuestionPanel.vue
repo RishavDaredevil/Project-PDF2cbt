@@ -8,63 +8,75 @@
   >
     <div
       ref="imageContainerElem"
-      class="flex flex-col pb-12 grow"
+      class="flex flex-col pb-12 grow gap-12"
     >
-      <img
-        v-for="(url, index) in currentQuestionImgUrls"
-        :key="index"
-        :src="url"
-        draggable="false"
-        :style="{
-          width: currentQuestionImgWidths?.[index] + 'px',
-          objectFit: 'contain',
-        }"
-        @load="(e) => handleImageLoad(e, currentQueId, index)"
+      <div
+        v-for="question in questionsInSection"
+        :key="question.queId"
+        :id="`question-${question.queId}`"
+        class="flex flex-col question-block"
+        :data-que-id="question.queId"
       >
-      <CbtInterfaceAnswerOptionsDiv
-        v-show="currentQuestionDetails.questionType === 'mcq' || currentQuestionDetails.questionType === 'msq'"
-        v-model="currentQuestionMcqOrMsqAnswer"
-        :question-type="currentQuestionDetails.questionType"
-        :total-options="currentQuestionDetails.answerOptions"
-        :answer-options-counter-type="currentQuestionDetails.answerOptionsCounterType"
-        class="ml-5 mt-1"
-        @update:model-value="logCurrentAnswer"
-      />
-      <CbtInterfaceMsmAnswerOptionsDiv
-        v-show="currentQuestionDetails.questionType === 'msm'"
-        v-model="currentQuestionMsmAnswer"
-        :question-type="currentQuestionDetails.questionType"
-        :total-options="currentQuestionDetails.answerOptions"
-        :answer-options-counter-type="currentQuestionDetails.answerOptionsCounterType"
-        class="ml-5 mt-1"
-        @log-current-answer="logCurrentAnswer"
-        @answer-changed="currentQuestionMsmAnswer = $event"
-      />
-      <CbtInterfaceAnswerNumericDiv
-        v-show="currentQuestionDetails.questionType === 'nat'"
-        v-model="currentQuestionNatAnswer"
-        :current-que-id="currentQuestionDetails.currentQueId"
-        :question-type="currentQuestionDetails.questionType"
-        :last-logged-answer="lastLoggedAnswer"
-        class="ml-5 mt-2"
-        @log-current-answer="logCurrentAnswer"
-      />
+        <div class="flex items-center gap-2 mb-2 border-b pb-1">
+             <span class="font-bold text-lg">Q.{{ question.que }}</span>
+             <span class="text-xs text-gray-500">({{ question.type.toUpperCase() }})</span>
+        </div>
+
+        <img
+            v-for="(url, index) in getQuestionImgUrls(question.queId)"
+            :key="`${question.queId}-${index}`"
+            :src="url"
+            draggable="false"
+            :style="{
+            width: getQuestionImgWidth(question.queId, index) + 'px',
+            objectFit: 'contain',
+            }"
+            class="mb-4"
+            @load="(e) => handleImageLoad(e, question.queId, index)"
+        >
+
+        <CbtInterfaceAnswerOptionsDiv
+            v-show="question.type === 'mcq' || question.type === 'msq'"
+            :model-value="getAnswer(question)"
+            :question-type="question.type"
+            :total-options="question.answerOptions || '4'"
+            :answer-options-counter-type="getCounterType(question)"
+            class="ml-5 mt-1"
+            @update:model-value="(val) => setAnswer(question, val)"
+        />
+        <CbtInterfaceMsmAnswerOptionsDiv
+            v-show="question.type === 'msm'"
+            :model-value="getMsmAnswer(question)"
+            :question-type="question.type"
+            :total-options="question.answerOptions || '4'"
+            :answer-options-counter-type="getCounterType(question)"
+            class="ml-5 mt-1"
+            @answer-changed="(val) => setAnswer(question, val)"
+        />
+        <CbtInterfaceAnswerNumericDiv
+            v-show="question.type === 'nat'"
+            :model-value="getNatAnswer(question)"
+            :current-que-id="question.queId"
+            :question-type="question.type"
+            :last-logged-answer="lastLoggedAnswer"
+            class="ml-5 mt-2"
+            @update:model-value="(val) => setAnswer(question, val)"
+        />
+      </div>
     </div>
     <div
       v-if="uiSettings.mainLayout.showScrollToTopAndBottomBtns"
-      class="flex flex-col justify-between shrink-0 w-[2.2rem] mr-3 pb-7"
+      class="flex flex-col justify-between shrink-0 w-[2.2rem] mr-3 pb-7 fixed right-4 bottom-20 z-50"
     >
       <Icon
         name="mdi:arrow-down-circle"
-        class="text-blue-600 bg-white hover:cursor-pointer
-          hidden! group-has-data-[slot=scroll-area-scrollbar]:block!"
+        class="text-blue-600 bg-white hover:cursor-pointer shadow-lg rounded-full"
         size="2.2rem"
         @click="handleScrollToBtns('bottom')"
       />
       <Icon
         name="mdi:arrow-up-circle"
-        class="text-blue-600 bg-white hover:cursor-pointer
-          hidden! group-has-data-[slot=scroll-area-scrollbar]:block!"
+        class="text-blue-600 bg-white hover:cursor-pointer shadow-lg rounded-full"
         size="2.2rem"
         @click="handleScrollToBtns('top')"
       />
@@ -85,15 +97,19 @@ const props = defineProps<{
 }>()
 
 const scrollAreaRef = useTemplateRef('scrollAreaRef')
-
 const imageContainerElem = useTemplateRef('imageContainerElem')
 const { width: containerWidth } = useElementSize(imageContainerElem)
 
-const { testQuestionsData, currentTestState, testQuestionsUrls, lastLoggedAnswer } = useCbtTestData()
-
+const { testQuestionsData, currentTestState, testQuestionsUrls, lastLoggedAnswer, testSectionsData } = useCbtTestData()
 const { uiSettings } = useCbtSettings()
 
 const questionsImgWidths = reactive<QuestionsImgWidths>({})
+
+// Get all questions in current section, sorted by sequence
+const questionsInSection = computed(() => {
+    const sectionData = testSectionsData.value[currentTestState.value.section] || {}
+    return Object.values(sectionData).sort((a, b) => a.secQueId - b.secQueId)
+})
 
 const questionImgMaxSize = computed(() => {
   if (props.isQuestionPalleteCollapsed) {
@@ -104,139 +120,119 @@ const questionImgMaxSize = computed(() => {
   }
 })
 
-const currentQueId = computed(() => currentTestState.value.queId)
-
-const currentQuestionImgUrls = computed(() => {
-  const questionImgs = testQuestionsUrls.value?.[currentQueId.value]
+const getQuestionImgUrls = (queId: number) => {
+  const questionImgs = testQuestionsUrls.value?.[queId]
   return questionImgs || []
-})
+}
 
-const currentQuestionImgWidths = computed(() => {
-  const queId = currentQueId.value
+const getQuestionImgWidth = (queId: number, index: number | string) => {
   const containerW = containerWidth.value
   const maxPercent = questionImgMaxSize.value
   const queImgsWidths = questionsImgWidths[queId]
 
   if (!queImgsWidths || containerW === 0) {
-    return {}
+    return undefined // let it be natural or max-width
   }
+
+  const w = queImgsWidths[index]
+  if (!w) return undefined
+
+  // Calculate scaling
+  // We need the max width of ANY image in this question to scale them uniformly?
+  // Or scale individually? The original code calculated global scale based on maxOriginalWidth.
   const maxOriginalWidth = Math.max(...Object.values(queImgsWidths))
   const maxAllowedWidth = (containerW * maxPercent) / 100
   const globalScale = maxAllowedWidth / maxOriginalWidth
 
-  const scaled: QuestionsImgWidths[string] = {}
+  return Math.floor(w * globalScale)
+}
 
-  for (const [index, w] of Object.entries(queImgsWidths)) {
-    scaled[index] = Math.floor(w * globalScale)
+const handleImageLoad = (e: Event, queId: string | number, imgindex: number | string) => {
+  const img = e.target as HTMLImageElement | null
+  if (img) {
+     questionsImgWidths[queId] ??= {}
+     questionsImgWidths[queId]![imgindex] = img.naturalWidth || 0
   }
+}
 
-  return scaled
-})
+// Helpers for Answer Options
+const getCounterType = (question: TestSessionQuestionData) => {
+    return props.cropperSectionsData[question.section]?.[question.que]?.answerOptionsCounterType
+}
 
-const currentQuestionDetails = computed(() => {
-  const currentQueId = currentTestState.value.queId
+const getAnswer = (question: TestSessionQuestionData) => {
+    if (question.type === 'mcq') return question.answer ?? ''
+    if (question.type === 'msq') return question.answer ?? []
+    return ''
+}
 
-  const currentQuestion = testQuestionsData.value.get(currentQueId)!
-  const questionType = currentQuestion.type
-  const answerOptions = currentQuestion.answerOptions || '4'
-  const { answerOptionsCounterType } = props.cropperSectionsData[currentQuestion.section]?.[currentQuestion.que] ?? {}
-
-  return {
-    questionType,
-    answerOptions,
-    currentQueId,
-    answerOptionsCounterType,
-  }
-})
-
-const currentQuestionMsmAnswer = computed({
-  get: () => {
-    if (currentQuestionDetails.value.questionType === 'msm') {
-      const buffAnswer = currentTestState.value.currentAnswerBuffer
+const getMsmAnswer = (question: TestSessionQuestionData) => {
+    // Need logic to parse MSM answer buffer
+    // For now assuming it matches the type expected by component
+     const buffAnswer = question.answer
       if (buffAnswer)
         return buffAnswer as QuestionMsmAnswerType
 
-      return getNewMsmAnswerObject(currentQuestionDetails.value.answerOptions)
-    }
-    return {} as QuestionMsmAnswerType
-  },
-  set: (newVal) => {
-    const isNoneSelected = Object.values(newVal).every(arr => arr.length === 0)
-    currentTestState.value.currentAnswerBuffer = isNoneSelected ? null : newVal
-  },
-})
+      return getNewMsmAnswerObject(question.answerOptions || '4')
+}
 
-const currentQuestionNatAnswer = computed({
-  get: (): string => {
-    if (currentQuestionDetails.value.questionType === 'nat') {
-      return (currentTestState.value.currentAnswerBuffer ?? '') as string
-    }
-    return ''
-  },
-  set: (newValue) => {
-    currentTestState.value.currentAnswerBuffer = newValue === '' ? null : newValue
-  },
-})
-
-const currentQuestionMcqOrMsqAnswer = computed({
-  get: () => {
-    const questionType = currentQuestionDetails.value.questionType
-
-    if (questionType === 'mcq') {
-      return currentTestState.value.currentAnswerBuffer ?? ''
-    }
-    else if (questionType === 'msq') {
-      return currentTestState.value.currentAnswerBuffer ?? []
-    }
-
-    return ''
-  },
-  set: (value) => {
-    const questionType = currentQuestionDetails.value.questionType
-
-    if (questionType === 'msq') {
-      if (Array.isArray(value) && value.length > 0) {
-        currentTestState.value.currentAnswerBuffer = value
-      }
-      else {
-        currentTestState.value.currentAnswerBuffer = null
-      }
-    }
-    else {
-      currentTestState.value.currentAnswerBuffer = value === '' ? null : value
-    }
-  },
-})
-
-const handleImageLoad = (e: Event, queId: string | number, imgindex: number) => {
-  const w = questionsImgWidths?.[queId]?.[imgindex]
-
-  if (typeof w === 'number' && w > 0) {
-    return
-  }
-
-  questionsImgWidths[queId] ??= {}
-
-  const img = e.target as HTMLImageElement | null
-  if (img) {
-    questionsImgWidths[queId]![imgindex] = img.naturalWidth || 0
-  }
+const getNatAnswer = (question: TestSessionQuestionData) => {
+    return (question.answer ?? '') as string
 }
 
 const testLogger = useCbtLogger()
 
-const logCurrentAnswer = () => {
-  const currentAnswer = currentTestState.value.currentAnswerBuffer
-  testLogger.currentAnswer(currentAnswer)
+const setAnswer = (question: TestSessionQuestionData, val: any) => {
+    // We update the question data directly?
+    // Usually we update currentTestState.currentAnswerBuffer.
+    // But now we have multiple questions visible.
+    // We should probably update the question data directly AND update currentTestState if it's the "active" question.
+
+    // Actually, `changeCurrentQuestion` and `saveCurrentAnswer` in interface.vue handle saving.
+    // But here we are binding directly to the inputs.
+    // We should update the `question.answer` (ref to object in map).
+
+    // Wait, the original code used `currentTestState.currentAnswerBuffer`.
+    // If we want "Instant Exam" feel, we probably want auto-save on change?
+
+    // Let's update the question.answer directly.
+    // And also log it.
+
+    // Handling specific types
+    let newAnswer = val
+    if (question.type === 'msq') {
+        if (!Array.isArray(val) || val.length === 0) newAnswer = null
+    } else if (val === '') {
+        newAnswer = null
+    }
+
+    const prevAnswer = question.answer
+    const prevStatus = question.status
+
+    question.answer = newAnswer
+
+    // Update status
+    if (newAnswer !== null) {
+        question.status = 'answered'
+    } else if (question.status === 'answered') {
+        question.status = 'notAnswered'
+    }
+
+    // Log
+    // testLogger.currentAnswer(newAnswer) // This logs for "current" question.
+    // We might need to set this question as current first?
+
+    if (currentTestState.value.queId !== question.queId) {
+        currentTestState.value.queId = question.queId
+        currentTestState.value.question = question.que
+        // currentTestState.value.section = question.section // Should be same
+    }
 }
 
 function getNewMsmAnswerObject(answerOption: string) {
   const rows = parseInt(answerOption || '4')
-
   const answerObj: QuestionMsmAnswerType = {}
-  utilRange(1, rows + 1)
-    .forEach(r => answerObj[r] = [])
-
+  utilRange(1, rows + 1).forEach(r => answerObj[r] = [])
   return answerObj
 }
 
@@ -249,9 +245,49 @@ const handleScrollToBtns = (dir: 'top' | 'bottom') => {
   })
 }
 
-// Reset scroll position to top when question changes
+// Intersection Observer to track active question
+let observer: IntersectionObserver | null = null
+
+onMounted(() => {
+    const options = {
+        root: scrollAreaRef.value?.$el || null, // ScrollArea root?
+        // UiScrollArea renders a div with class 'viewport'. We need that.
+        // scrollAreaRef.value.viewport is the element.
+        rootMargin: '-50% 0px -50% 0px', // Trigger when element is in middle
+        threshold: 0
+    }
+
+    observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const queId = parseInt(entry.target.getAttribute('data-que-id') || '0')
+                if (queId && queId !== currentTestState.value.queId) {
+                     currentTestState.value.queId = queId
+                     const q = testQuestionsData.value.get(queId)
+                     if (q) {
+                         currentTestState.value.question = q.que
+                     }
+                }
+            }
+        })
+    }, options)
+
+    // Observe elements
+    // We need to wait for DOM update
+    watch(questionsInSection, () => {
+        nextTick(() => {
+            document.querySelectorAll('.question-block').forEach(el => observer?.observe(el))
+        })
+    }, { immediate: true })
+})
+
+onUnmounted(() => {
+    observer?.disconnect()
+})
+
+// Scroll to top when section changes
 watch(
-  () => currentTestState.value.queId,
+  () => currentTestState.value.section,
   () => scrollAreaRef.value?.viewport?.scrollTo({ top: 0, behavior: 'instant' }),
 )
 </script>
