@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.30.3](https://github.com/RishavDaredevil/Project-PDF2cbt/compare/v1.30.2...v1.30.3) (2026-01-14)
+
+
+### Bug Fixes
+
+* **cbt:** fix pdf scrolling, answer persistence and overhaul theme ([56fd5cb](https://github.com/RishavDaredevil/Project-PDF2cbt/commit/56fd5cbb51181f5d78dd210886ea5344cb49e769))
+* **cbt:** fix persistence, pdf scrolling and theme overhaul ([bcfe514](https://github.com/RishavDaredevil/Project-PDF2cbt/commit/bcfe514cc45854e058275e324c96722cf87cd300))
+
 ## [1.30.2](https://github.com/TheMoonVyy/pdf2cbt/compare/v1.30.1...v1.30.2) (2025-12-29)
 
 
