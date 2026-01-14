@@ -257,6 +257,47 @@ export default () => {
     testSectionsSummary,
     instantExamPdf,
     instantExamData,
-    initializeInstantTest
+    initializeInstantTest,
+    saveAnswer
+  }
+
+  async function saveAnswer(data: { questionId: number, answer: QuestionAnswer }) {
+    const { questionId, answer } = data
+    const questionData = testQuestionsData.value.get(questionId)
+    const db = useDB()
+    const logger = useCbtLogger()
+
+    if (questionData) {
+      // Logic to determine new status
+      let newStatus = questionData.status
+      if (answer !== null) {
+        if (newStatus === 'marked') {
+          newStatus = 'markedAnswered'
+        }
+        else if (newStatus === 'notAnswered' || newStatus === 'notVisited') {
+          newStatus = 'answered'
+        }
+      }
+      else {
+        // If answer cleared
+        if (newStatus === 'markedAnswered') {
+          newStatus = 'marked'
+        }
+        else {
+          newStatus = 'notAnswered'
+        }
+      }
+
+      questionData.answer = answer
+      questionData.status = newStatus
+
+      logger.currentAnswer(answer)
+      await db.updateQuestionData(utilCloneJson(questionData))
+
+      // Sync currentTestState if applicable
+      if (currentTestState.value.queId === questionId) {
+        currentTestState.value.currentAnswerBuffer = utilCloneJson(answer)
+      }
+    }
   }
 }

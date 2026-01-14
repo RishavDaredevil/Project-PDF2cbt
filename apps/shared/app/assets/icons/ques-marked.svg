@@ -4,5 +4,5 @@
       <feDropShadow dx="0" dy="0" flood-color="black" />
     </filter>
   </defs>
-  <rect x="5" y="5" width="90" height="90" rx="20" fill="#734f96" filter="url(#shadow)" />
+  <rect x="5" y="5" width="90" height="90" rx="20" fill="#f59e0b" filter="url(#shadow)" />
 </svg>

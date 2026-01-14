@@ -100,7 +100,7 @@ const scrollAreaRef = useTemplateRef('scrollAreaRef')
 const imageContainerElem = useTemplateRef('imageContainerElem')
 const { width: containerWidth } = useElementSize(imageContainerElem)
 
-const { testQuestionsData, currentTestState, testQuestionsUrls, lastLoggedAnswer, testSectionsData } = useCbtTestData()
+const { testQuestionsData, currentTestState, testQuestionsUrls, lastLoggedAnswer, testSectionsData, saveAnswer } = useCbtTestData()
 const { uiSettings } = useCbtSettings()
 
 const questionsImgWidths = reactive<QuestionsImgWidths>({})
@@ -183,21 +183,6 @@ const getNatAnswer = (question: TestSessionQuestionData) => {
 const testLogger = useCbtLogger()
 
 const setAnswer = (question: TestSessionQuestionData, val: any) => {
-    // We update the question data directly?
-    // Usually we update currentTestState.currentAnswerBuffer.
-    // But now we have multiple questions visible.
-    // We should probably update the question data directly AND update currentTestState if it's the "active" question.
-
-    // Actually, `changeCurrentQuestion` and `saveCurrentAnswer` in interface.vue handle saving.
-    // But here we are binding directly to the inputs.
-    // We should update the `question.answer` (ref to object in map).
-
-    // Wait, the original code used `currentTestState.currentAnswerBuffer`.
-    // If we want "Instant Exam" feel, we probably want auto-save on change?
-
-    // Let's update the question.answer directly.
-    // And also log it.
-
     // Handling specific types
     let newAnswer = val
     if (question.type === 'msq') {
@@ -206,26 +191,15 @@ const setAnswer = (question: TestSessionQuestionData, val: any) => {
         newAnswer = null
     }
 
-    const prevAnswer = question.answer
-    const prevStatus = question.status
-
-    question.answer = newAnswer
-
-    // Update status
-    if (newAnswer !== null) {
-        question.status = 'answered'
-    } else if (question.status === 'answered') {
-        question.status = 'notAnswered'
-    }
-
-    // Log
-    // testLogger.currentAnswer(newAnswer) // This logs for "current" question.
-    // We might need to set this question as current first?
+    // Call saveAnswer immediately
+    saveAnswer({
+        questionId: question.queId,
+        answer: newAnswer
+    })
 
     if (currentTestState.value.queId !== question.queId) {
         currentTestState.value.queId = question.queId
         currentTestState.value.question = question.que
-        // currentTestState.value.section = question.section // Should be same
     }
 }
 

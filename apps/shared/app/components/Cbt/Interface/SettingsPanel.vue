@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex dark overflow-hidden min-h-0 grow bg-background"
+    class="flex overflow-hidden min-h-0 grow bg-background"
   >
     <UiScrollArea
       type="auto"

@@ -61,14 +61,15 @@ function resizeImage(type: 'increase' | 'decrease') {
 </script>
 
 <template>
-  <div
-    class="fixed top-0 left-0 right-0 bottom-0 bg-black/50 flex items-center justify-center z-1000"
-    :style="{
-      '--img-width-size': imgWidthSize + '%',
-    }"
-    @click.self="showDialog = false"
-  >
-    <div class="flex flex-col bg-white rounded-xl w-[90dvw] h-[90dvh]">
+  <Teleport to="body">
+    <div
+      class="fixed top-0 left-0 right-0 bottom-0 bg-black/50 flex items-center justify-center z-[9999]"
+      :style="{
+        '--img-width-size': imgWidthSize + '%',
+      }"
+      @click.self="showDialog = false"
+    >
+      <div class="flex flex-col bg-white rounded-xl w-[90dvw] h-[90dvh]">
       <!-- Header -->
       <div class="sticky top-0 z-10 py-2 px-6 grid grid-cols-[1fr_auto_1fr] items-center gap-4 border-b border-gray-400">
         <div></div> <!-- Empty placeholder for left spacing -->
@@ -143,4 +144,5 @@ function resizeImage(type: 'increase' | 'decrease') {
       </UiScrollArea>
     </div>
   </div>
+  </Teleport>
 </template>

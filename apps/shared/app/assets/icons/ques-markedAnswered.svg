@@ -4,6 +4,6 @@
       <feDropShadow dx="0" dy="0" flood-color="black" />
     </filter>
   </defs>
-  <rect x="5" y="5" width="90" height="90" rx="20" fill="#734f96" filter="url(#shadow)" />
-  <circle cx="78" cy="80" r="13" fill="lightgreen" />
+  <rect x="5" y="5" width="90" height="90" rx="20" fill="#4f46e5" filter="url(#shadow)" />
+  <circle cx="78" cy="80" r="13" fill="#f59e0b" />
 </svg>
