@@ -9,6 +9,9 @@ import type { MuPdfProcessor } from '#layers/shared/app/src/worker/mupdf.worker'
 
 type PageNumKey = number | string
 
+// Define the structure for Page Dimensions
+type PageDimensions = Record<number, { width: number, height: number }>
+
 type ProcessedCropperData = {
   [page: PageNumKey]: {
     pdfData: {
@@ -48,8 +51,10 @@ mupdfOgWorker.onmessage = (e) => {
   }
 }
 
+// Updated to accept pageDimensions
 function processCropperData(
   cropperData: CropperSectionsData,
+  pageDimensions: PageDimensions
 ): ProcessedCropperData {
   const processedData: ProcessedCropperData = {}
   const scale = pdfState.scale
@@ -62,10 +67,28 @@ function processCropperData(
 
       for (const pdfDataItem of pdfData) {
         const { page, x1, y1, x2, y2 } = pdfDataItem
-        const x = Math.min(x1, x2) * scale
-        const y = Math.min(y1, y2) * scale
-        const w = Math.abs(x2 - x1) * scale
-        const h = Math.abs(y2 - y1) * scale
+        
+        let x, y, w, h;
+
+        // CHECK: If coordinates are all 0 (Instant Exam default), use FULL PAGE
+        if (x1 === 0 && y1 === 0 && x2 === 0 && y2 === 0) {
+            const pageDim = pageDimensions[page];
+            if (pageDim) {
+                x = 0;
+                y = 0;
+                w = pageDim.width * scale;
+                h = pageDim.height * scale;
+            } else {
+                // Fallback if page not found
+                x = 0; y = 0; w = 0; h = 0;
+            }
+        } else {
+            // Standard cropping logic
+            x = Math.min(x1, x2) * scale
+            y = Math.min(y1, y2) * scale
+            w = Math.abs(x2 - x1) * scale
+            h = Math.abs(y2 - y1) * scale
+        }
 
         processedData[page] ??= []
 
@@ -98,7 +121,17 @@ async function loadPdfFile() {
 async function generateQuestionImages() {
   const cropperData = utilCloneJson(props.cropperSectionsData)
 
-  const processedCropperData = processCropperData(cropperData)
+  // FETCH page dimensions first to handle 0-crop cases
+  const pageDimensionsRaw = await mupdfWorker.getAllPagesDimensionsData();
+  
+  // Transform to simpler object if needed, or cast type
+  const pageDimensions: PageDimensions = {};
+  for (const [pageNum, data] of Object.entries(pageDimensionsRaw)) {
+      pageDimensions[parseInt(pageNum)] = { width: data.width, height: data.height };
+  }
+
+  // Pass dimensions to processor
+  const processedCropperData = processCropperData(cropperData, pageDimensions)
   const scale = pdfState.scale
 
   const questionsBlobs = await mupdfWorker.generateQuestionImages(

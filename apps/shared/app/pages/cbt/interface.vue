@@ -16,199 +16,149 @@
         && !submitState.unableToSave"
       class="flex flex-col max-w-full max-h-dvh min-h-dvh select-none"
     >
+    >
       <div
-        class="flex shrink-0"
+        class="flex shrink-0 w-full flex-col relative"
       >
         <div
-          class="flex flex-col border-b-2 border-slate-400 shrink-0"
-          :style="{ width: `${100 - (uiSettings.questionPalette.width || 15)}%` }"
+          v-show="!isHeaderCollapsed"
+          class="flex w-full"
         >
           <div
-            v-if="uiSettings.mainLayout.testTotalHeaderHeight"
-            class="flex py-1 bg-gray-100 shrink-0"
-            :style="{ height: `${uiSettings.mainLayout.testTotalHeaderHeight}rem` }"
+            class="flex flex-col border-b-2 border-slate-400 shrink-0"
+            :style="{ width: `${100 - (uiSettings.questionPalette.width || 15)}%` }"
           >
             <div
-              class="flex ml-8 gap-2 items-center primary-theme"
-              data-id="test_total_summary"
+              v-if="uiSettings.mainLayout.testTotalHeaderHeight"
+              class="flex py-1 bg-gray-100 shrink-0"
+              :style="{ height: `${uiSettings.mainLayout.testTotalHeaderHeight}rem` }"
             >
-              <span class="pl-3 py-0.5">{{ testSettings.testName }}</span>
-              <CbtInterfaceSectionSummaryTooltip
-                :section-name="testSettings.testName"
-                :question-status-list="questionStatusList"
-                :ques-icons="uiSettings.questionPalette.quesIcons"
-                :total-summary="testTotalSummary"
-                data-id-selector="test_total_summary"
-                icon-class="cursor-pointer text-xl!"
-              />
-            </div>
-            <div
-              class="flex gap-2 items-center ml-auto"
-            >
-              <BaseButton
-                label="Calculator"
-                variant="link"
-                size="sm"
-                class="mr-1 text-black!"
-                icon-name="mdi:calculator"
-                :disabled="isTestPaused || testState.currentProcess !== 'test-started'"
-                @click="showCalculator = !showCalculator"
-              />
-              <BaseButton
-                v-if="uiSettings.mainLayout.showQuestionPaperBtn"
-                label="Question Paper"
-                variant="link"
-                size="sm"
-                class="mr-1 text-black!"
-                icon-name="prime:file"
-                :disabled="isTestPaused || testState.currentProcess !== 'test-started'"
-                @click="questionPaperDialogState.openDialog = true"
-              />
-            </div>
-          </div>
-          <div class="flex justify-between px-3 py-0.5 shrink-0">
-            <span class="flex ml-auto items-center">Time Left:&nbsp;&nbsp;{{ testTimeLeftString }}</span>
-          </div>
-          <CbtInterfaceQuestionPaperDialog
-            v-if="questionPaperDialogState.openDialog"
-            v-model="questionPaperDialogState.openDialog"
-            v-model:img-width-size="questionPaperDialogState.imgWidthSize"
-            :questions-numbering-order-type="currentTestState.questionsNumberingOrderType"
-          />
-          <CbtInterfaceCalculator v-if="showCalculator" @close="showCalculator = false" />
-          <UiScrollArea
-            class="w-full border-slate-400"
-            viewport-class="[&>div]:mb-3"
-            type="auto"
-          >
-            <div
-              class="flex last:border-r-2 border-y-2 border-slate-400 w-full whitespace-nowrap px-2 divide-x-2 divide-slate-400"
-              :style="{ height: `${uiSettings.mainLayout.sectionHeaderHeight}rem` }"
-            >
-              <template
-                v-for="(sectionItem, index) in testSectionsList"
-                :key="sectionItem.name"
+              <div
+                class="flex ml-8 gap-2 items-center primary-theme"
+                data-id="test_total_summary"
               >
-                <div
-                  class="flex items-center gap-2 my-[-2px] cursor-pointer"
-                  :class="{
-                    'primary-theme': sectionItem.name === currentTestState.section,
-                    'border-slate-400 border-r-2!': index === (testSectionsList.length - 1),
-                  }"
-                  :data-id="'data-id_' + sectionItem.name"
-                  @click="changeCurrentQuestion('sectionBtn', null, sectionItem.name)"
-                >
-                  <span class="pl-3 py-0.5">
-                    {{ sectionItem.name }}
-                  </span>
-                  <CbtInterfaceSectionSummaryTooltip
-                    :section-name="sectionItem.name"
-                    :question-status-list="questionStatusList"
-                    :ques-icons="uiSettings.questionPalette.quesIcons"
-                    :section-summary="testSectionsSummary.get(sectionItem.name)!"
-                    :data-id-selector="'data-id_' + sectionItem.name"
-                  />
-                </div>
-              </template>
+                <span class="pl-3 py-0.5">{{ testSettings.testName }}</span>
+                <CbtInterfaceSectionSummaryTooltip
+                  :section-name="testSettings.testName"
+                  :question-status-list="questionStatusList"
+                  :ques-icons="uiSettings.questionPalette.quesIcons"
+                  :total-summary="testTotalSummary"
+                  data-id-selector="test_total_summary"
+                  icon-class="cursor-pointer text-xl!"
+                />
+              </div>
+              <div
+                class="flex gap-2 items-center ml-auto"
+              >
+                <BaseButton
+                  label="Calculator"
+                  variant="link"
+                  size="sm"
+                  class="mr-1 text-black!"
+                  icon-name="mdi:calculator"
+                  :disabled="isTestPaused || testState.currentProcess !== 'test-started'"
+                  @click="showCalculator = !showCalculator"
+                />
+                <BaseButton
+                  v-if="uiSettings.mainLayout.showQuestionPaperBtn"
+                  label="Question Paper"
+                  variant="link"
+                  size="sm"
+                  class="mr-1 text-black!"
+                  icon-name="prime:file"
+                  :disabled="isTestPaused || testState.currentProcess !== 'test-started'"
+                  @click="questionPaperDialogState.openDialog = true"
+                />
+              </div>
             </div>
-            <UiScrollBar
-              orientation="horizontal"
-              class="bg-neutral-800/60"
-              thumb-area-class="bg-(--bg-primary-theme-color)"
+            <div class="flex justify-between px-3 py-0.5 shrink-0">
+              <span class="flex ml-auto items-center">Time Left:&nbsp;&nbsp;{{ testTimeLeftString }}</span>
+            </div>
+            <CbtInterfaceQuestionPaperDialog
+              v-if="questionPaperDialogState.openDialog"
+              v-model="questionPaperDialogState.openDialog"
+              v-model:img-width-size="questionPaperDialogState.imgWidthSize"
+              :questions-numbering-order-type="currentTestState.questionsNumberingOrderType"
             />
-          </UiScrollArea>
+            <CbtInterfaceCalculator v-if="showCalculator" @close="showCalculator = false" />
+            <UiScrollArea
+              class="w-full border-slate-400"
+              viewport-class="[&>div]:mb-3"
+              type="auto"
+            >
+              <div
+                class="flex last:border-r-2 border-y-2 border-slate-400 w-full whitespace-nowrap px-2 divide-x-2 divide-slate-400"
+                :style="{ height: `${uiSettings.mainLayout.sectionHeaderHeight}rem` }"
+              >
+                <template
+                  v-for="(sectionItem, index) in testSectionsList"
+                  :key="sectionItem.name"
+                >
+                  <div
+                    class="flex items-center gap-2 my-[-2px] cursor-pointer"
+                    :class="{
+                      'primary-theme': sectionItem.name === currentTestState.section,
+                      'border-slate-400 border-r-2!': index === (testSectionsList.length - 1),
+                    }"
+                    :data-id="'data-id_' + sectionItem.name"
+                    @click="changeCurrentQuestion('sectionBtn', null, sectionItem.name)"
+                  >
+                    <span class="pl-3 py-0.5">
+                      {{ sectionItem.name }}
+                    </span>
+                    <CbtInterfaceSectionSummaryTooltip
+                      :section-name="sectionItem.name"
+                      :question-status-list="questionStatusList"
+                      :ques-icons="uiSettings.questionPalette.quesIcons"
+                      :section-summary="testSectionsSummary.get(sectionItem.name)!"
+                      :data-id-selector="'data-id_' + sectionItem.name"
+                    />
+                  </div>
+                </template>
+              </div>
+              <UiScrollBar
+                orientation="horizontal"
+                class="bg-neutral-800/60"
+                thumb-area-class="bg-(--bg-primary-theme-color)"
+              />
+            </UiScrollArea>
+          </div>
+          <div
+            ref="profileDetailsContainerElem"
+            class="flex flex-1 gap-3 border-l-2 border-b-2 border-slate-500"
+            :class="isFullscreen ? 'cursor-zoom-out' : 'cursor-zoom-in'"
+            @click="toggleFullScreen()"
+          >
+            <div class="flex items-center justify-center w-2/5">
+              <span
+                class="bg-image bg-contain"
+                :style="{
+                  backgroundImage: `url(&quot;${miscSettings.profileImg || profileIcon}&quot;)`,
+                  width: `${miscSettings.imgWidth}%`,
+                  height: `${miscSettings.imgHeight}%`,
+                }"
+              />
+            </div>
+            <div class="flex items-center flex-1">
+              <span :style="{ fontSize: `${miscSettings.fontSize}rem` }">{{ miscSettings.username }}</span>
+            </div>
+          </div>
         </div>
         <div
-          ref="profileDetailsContainerElem"
-          class="flex flex-1 gap-3 border-l-2 border-b-2 border-slate-500"
-          :class="isFullscreen ? 'cursor-zoom-out' : 'cursor-zoom-in'"
-          @click="toggleFullScreen()"
+          class="flex justify-center bg-gray-200 hover:bg-gray-300 cursor-pointer py-0.5 border-b border-gray-300"
+          title="Toggle Header"
+          @click="isHeaderCollapsed = !isHeaderCollapsed"
         >
-          <div class="flex items-center justify-center w-2/5">
-            <span
-              class="bg-image bg-contain"
-              :style="{
-                backgroundImage: `url(&quot;${miscSettings.profileImg || profileIcon}&quot;)`,
-                width: `${miscSettings.imgWidth}%`,
-                height: `${miscSettings.imgHeight}%`,
-              }"
-            />
-          </div>
-          <div class="flex items-center flex-1">
-            <span :style="{ fontSize: `${miscSettings.fontSize}rem` }">{{ miscSettings.username }}</span>
-          </div>
+          <Icon
+            :name="isHeaderCollapsed ? 'mdi:chevron-down' : 'mdi:chevron-up'"
+            class="text-xl text-gray-600"
+          />
         </div>
       </div>
       <div
-        class="flex grow overflow-auto"
+        class="flex grow overflow-hidden h-full"
       >
-        <div class="flex flex-col relative grow">
-          <div
-            v-if="uiSettings.mainLayout.showQuestionType || uiSettings.mainLayout.showMarkingScheme"
-            class="flex px-2"
-          >
-            <span
-              v-if="uiSettings.mainLayout.showQuestionType"
-              class="flex items-center"
-              :style="{ fontSize: `${uiSettings.mainLayout.questionTypeFontSize}rem` }"
-            >
-              Question Type: {{ cropperSectionsData[currentTestState.section]?.[currentTestState.question]?.type.toUpperCase() || '' }}
-            </span>
-            <div
-              v-if="uiSettings.mainLayout.showMarkingScheme"
-              class="flex items-center ml-auto divide-x-2 divide-slate-500"
-              :style="{ fontSize: `${uiSettings.mainLayout.markingSchemeFontSize}rem` }"
-            >
-              <span class="px-2">
-                Correct:&nbsp;
-                <span class="text-green-700">
-                  +{{ cropperSectionsData?.[currentTestState.section]?.[currentTestState.question]?.marks.cm }}
-                </span>
-              </span>
-              <span
-                v-if="cropperSectionsData?.[currentTestState.section]?.[currentTestState.question]?.type === 'msq'"
-                class="px-2"
-              >
-                Partial:&nbsp;
-                <span class="text-orange-700">
-                  +{{ cropperSectionsData?.[currentTestState.section]?.[currentTestState.question]?.marks.pm }}
-                </span>
-              </span>
-              <span class="px-2">
-                Incorrect:&nbsp;
-                <span class="text-red-700">
-                  {{ cropperSectionsData?.[currentTestState.section]?.[currentTestState.question]?.marks.im }}
-                </span>
-              </span>
-            </div>
-          </div>
-          <div
-            v-if="uiSettings.mainLayout.sectionHeaderAndQuesPanelDividerHeight"
-            class="block shrink-0 primary-theme"
-            :style="{ height: `${uiSettings.mainLayout.sectionHeaderAndQuesPanelDividerHeight}rem` }"
-          />
-          <div class="flex px-2 mt-px border-y-2 gap-3 border-gray-300">
-            <span
-              class="flex items-center"
-              :style="{ fontSize: `${uiSettings.mainLayout.questionNumFontSize}rem` }"
-            >
-              Question No.
-              {{
-                currentTestState.questionsNumberingOrderType === 'cumulative'
-                  ? currentTestState.queId
-                  : currentTestState.questionsNumberingOrderType === 'section-wise'
-                    ? testQuestionsData.get(currentTestState.queId)?.secQueId
-                    : currentTestState.question
-              }}
-            </span>
-            <span
-              v-if="uiSettings.mainLayout.showQuestionTimeSpent"
-              class="pl-3 border-l-[1.5px] border-black"
-              :style="{ fontSize: `${uiSettings.mainLayout.questionTimeSpentFontSize}rem` }"
-            >
-              {{ questionTimeSpentString }}
-            </span>
-          </div>
+        <div class="flex flex-col relative grow h-full min-w-0">
           <CbtInterfaceSettingsPanel
             v-if="testState.currentProcess === 'initial'"
             v-model:test-state="testState"
@@ -223,14 +173,31 @@
             @current-question-progress="(questionNum) => testState.preparingTestCurrentQuestion = questionNum"
             @image-blobs-generated="loadQuestionsImgUrlsFromBlobs"
           />
-          <CbtInterfaceQuestionPanel
+          <template
             v-else-if="testState.currentProcess === 'test-is-ready' || testState.currentProcess === 'test-started'"
-            :class="{
-              hidden: testState.currentProcess !== 'test-started',
-            }"
-            :is-question-pallete-collapsed="isQuestionPalleteCollapsed"
-            :cropper-sections-data="cropperSectionsData"
-          />
+          >
+             <div class="flex flex-col grow h-full overflow-hidden">
+                <UiResizablePanelGroup
+                  direction="vertical"
+                  class="h-full w-full rounded-lg border"
+                >
+                  <UiResizablePanel :default-size="60" :min-size="30">
+                    <CbtInterfacePdfViewer
+                        :pdf-file="testState.pdfFile"
+                        class="grow min-h-0"
+                    />
+                  </UiResizablePanel>
+                  <UiResizableHandle />
+                  <UiResizablePanel :default-size="40" :min-size="20">
+                    <CbtInterfaceQuestionAnswerPanel
+                        class="h-full w-full"
+                        :cropper-sections-data="cropperSectionsData"
+                    />
+                  </UiResizablePanel>
+                </UiResizablePanelGroup>
+             </div>
+          </template>
+          
           <div
             class="flex absolute py-3 cursor-pointer right-0 top-1/2 z-10 bg-black"
             @click="isQuestionPalleteCollapsed = !isQuestionPalleteCollapsed"
@@ -712,6 +679,7 @@ const preparingTestProgressBar = computed(() => {
 })
 
 const isQuestionPalleteCollapsed = shallowRef(false)
+const isHeaderCollapsed = shallowRef(true)
 
 const isTestPaused = shallowRef(false)
 
@@ -941,9 +909,18 @@ function changeCurrentQuestion(
 function saveCurrentAnswer(via: AnswerSavedViaType | 'clear') {
   const currentQueId = currentTestState.value.queId
   const currentQuestionData = testQuestionsData.value.get(currentQueId)
-  const currentStatus = currentQuestionData?.status
+  
+  // FIX: Early exit if data is missing
+  if (!currentQuestionData) return null;
+
+  const currentStatus = currentQuestionData.status
   const saveQuestionsLikeRealExams = testSettings.value.saveQuestionsLikeRealExams
-  let currentAnswer = currentTestState.value.currentAnswerBuffer
+  
+  // FIX: Use currentQuestionData.answer as the source of truth.
+  // QuestionPanel.vue updates this directly on user input.
+  // We only reset to null if 'clear' is clicked.
+  let currentAnswer = currentQuestionData.answer 
+  
   const maybeClearedAnswer = currentAnswer
 
   let questionStatus: QuestionStatus
@@ -966,19 +943,18 @@ function saveCurrentAnswer(via: AnswerSavedViaType | 'clear') {
     questionStatus = currentAnswer !== null ? 'answered' : 'notAnswered'
   }
 
-  if (currentQuestionData) {
-    const prevStatus = currentQuestionData.status
-    const prevAnswer = currentQuestionData.answer
+  // We are already holding the reference to currentQuestionData
+  const prevStatus = currentQuestionData.status
+  const prevAnswer = currentQuestionData.answer // This might be same as currentAnswer if only status changed
 
-    currentQuestionData.answer = currentAnswer
-    currentQuestionData.status = questionStatus
+  currentQuestionData.answer = currentAnswer
+  currentQuestionData.status = questionStatus
 
-    if (via === 'clear') {
-      testLogger.answerCleared(maybeClearedAnswer, prevStatus)
-    }
-    else {
-      return { prevAnswer, prevStatus }
-    }
+  if (via === 'clear') {
+    testLogger.answerCleared(maybeClearedAnswer, prevStatus)
+  }
+  else {
+    return { prevAnswer, prevStatus }
   }
 
   return null
@@ -1070,7 +1046,6 @@ async function prepareTest() {
 const loadQuestionsImgUrlsFromBlobs = (testImageBlobs: TestImageBlobs) => {
   testQuestionsUrls.value = utilGetQuestionsUrlsFromTestImageBlobs(testImageBlobs, testQuestionsData.value)
   testState.testImageBlobs = null
-  testState.pdfFile = null
   testState.currentProcess = 'test-is-ready'
 }
 
