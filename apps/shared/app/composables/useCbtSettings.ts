@@ -20,15 +20,15 @@ const defaultUiSettings: CbtUiSettings = {
   themes: {
     base: {
       bgColor: '#ffffff',
-      textColor: '#000000',
+      textColor: '#0f172a',
     },
     primary: {
-      bgColor: '#7d00b3',
+      bgColor: '#4f46e5',
       textColor: '#ffffff',
     },
     secondary: {
-      bgColor: '#daeff8',
-      textColor: '#000000',
+      bgColor: '#f8fafc',
+      textColor: '#0f172a',
     },
   },
 

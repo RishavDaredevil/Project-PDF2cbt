@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex flex-col box-border light"
+    class="flex flex-col box-border light cbt-container"
     style="padding-top: env(safe-area-inset-top);
       padding-right: env(safe-area-inset-right);
       padding-bottom: env(safe-area-inset-bottom);
@@ -25,7 +25,7 @@
         >
           <div
             v-if="uiSettings.mainLayout.testTotalHeaderHeight"
-            class="flex py-1 bg-gray-100 shrink-0"
+            class="flex py-1 bg-gray-100 shrink-0 shadow-sm"
             :style="{ height: `${uiSettings.mainLayout.testTotalHeaderHeight}rem` }"
           >
             <div
@@ -140,7 +140,7 @@
         </div>
       </div>
       <div
-        class="flex grow overflow-auto"
+        class="flex grow overflow-hidden"
       >
         <div class="flex flex-col relative grow">
           <div
@@ -227,6 +227,7 @@
             v-else-if="testState.currentProcess === 'test-is-ready' || testState.currentProcess === 'test-started'"
             :class="{
               hidden: testState.currentProcess !== 'test-started',
+              'question-panel': true
             }"
             :is-question-pallete-collapsed="isQuestionPalleteCollapsed"
             :cropper-sections-data="cropperSectionsData"
@@ -866,8 +867,8 @@ function changeCurrentQuestion(
          answers are saved even when user changes questions
          via palette, previous or section buttons
       */
-      if ((via === 'palette' || via === 'sectionBtn' || via === 'previous')
-        && testSettings.value.saveQuestionsLikeRealExams) {
+      if (via === 'sectionBtn' || ((via === 'palette' || via === 'previous')
+        && testSettings.value.saveQuestionsLikeRealExams)) {
         answerSavedDetails = saveCurrentAnswer(via)
       }
 

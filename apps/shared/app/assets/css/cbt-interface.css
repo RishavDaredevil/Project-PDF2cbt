@@ -80,3 +80,40 @@ html {
   background-color: var(--bg-secondary-theme-color);
   color: var(--text-secondary-theme-color);
 }
+
+:root {
+  /* Backgrounds */
+  --background-primary: #ffffff;
+  --background-secondary: #f8fafc; /* Slate 50 */
+
+  /* Panels & Cards */
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0; /* Slate 200 */
+
+  /* Text */
+  --text-primary: #0f172a; /* Slate 900 */
+  --text-secondary: #64748b; /* Slate 500 */
+
+  /* Accents - Replacing the Green */
+  --primary-brand: #4f46e5; /* Indigo 600 - Aesthetic & Trustworthy */
+  --primary-hover: #4338ca;
+
+  /* Status Colors */
+  --status-answered: #4f46e5; /* Indigo instead of Green */
+  --status-marked: #f59e0b; /* Amber */
+  --status-visited: #cbd5e1; /* Slate 300 */
+}
+
+/* Force Light Mode on Exam Interface */
+.cbt-container {
+    background-color: #f8fafc;
+    color: #0f172a;
+}
+.question-panel {
+    background-color: white;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #e2e8f0;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    border-radius: 0.75rem;
+}
